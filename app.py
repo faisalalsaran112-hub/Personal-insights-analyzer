@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
 
 st.set_page_config(
     page_title="Personal Insights Analyzer",
@@ -340,6 +343,45 @@ Correlation between {col_a} and {col_b}: {correlation:.2f}
         summary,
         height=250
     )
+# Business Recommendations
+
+st.subheader("💡 Business Recommendations")
+
+if st.button("Generate Recommendations"):
+
+    recommendations = []
+
+    if quality_score < 90:
+        recommendations.append(
+            "Improve data quality by addressing missing values."
+        )
+
+    if len(outliers) > 0:
+        recommendations.append(
+            "Investigate detected outliers before making business decisions."
+        )
+
+    if abs(correlation) > 0.7:
+        recommendations.append(
+            f"Monitor the relationship between {col_a} and {col_b} closely."
+        )
+
+    if growth > 0:
+        recommendations.append(
+            f"{selected_column} shows positive growth. Continue monitoring performance."
+        )
+    else:
+        recommendations.append(
+            f"{selected_column} shows negative growth. Investigate the cause."
+        )
+
+    if len(recommendations) == 0:
+        recommendations.append(
+            "No major issues detected. Continue monitoring the dataset."
+        )
+
+    for rec in recommendations:
+        st.success(rec)    
 # AI Insights
     st.subheader("🤖 AI Insights")
 
@@ -358,7 +400,88 @@ Correlation between {col_a} and {col_b}: {correlation:.2f}
 
             st.success("AI Analysis Complete")
             st.markdown("\n".join(insights))
+# PDF Report Export
 
+st.subheader("📄 Export PDF Report")
+
+if st.button("Generate PDF Report"):
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer)
+
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    content.append(
+        Paragraph(
+            "Personal Insights Analyzer Report",
+            styles["Title"]
+        )
+    )
+
+    content.append(Spacer(1, 12))
+
+    content.append(
+        Paragraph(
+            f"Rows: {df.shape[0]}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Columns: {df.shape[1]}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Quality Score: {quality_score}%",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Selected Metric: {selected_column}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Average: {avg_value:.2f}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Maximum: {max_value}",
+            styles["BodyText"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            f"Minimum: {min_value}",
+            styles["BodyText"]
+        )
+    )
+
+    doc.build(content)
+
+    pdf_data = buffer.getvalue()
+
+    st.download_button(
+        label="⬇️ Download PDF Report",
+        data=pdf_data,
+        file_name="analysis_report.pdf",
+        mime="application/pdf"
+    )
 # Download
     st.subheader("⬇️ Download Data")
 
