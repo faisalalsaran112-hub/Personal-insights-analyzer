@@ -5,48 +5,32 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
 
-st.set_page_config(
-    page_title="Personal Insights Analyzer",
-    page_icon="📊",
-    layout="wide"
-)
+st.set_page_config(page_title="Personal Insights Analyzer", page_icon="📊", layout="wide")
 
-# Sidebar
 st.sidebar.title("📊 Dashboard Controls")
 st.sidebar.write("Upload your file and explore the data")
 
-# Main Title
 st.title("📊 Personal Insights Analyzer")
 st.markdown("Analyze your Excel data in seconds")
 
-# File Upload
-uploaded_file = st.file_uploader(
-    "Upload Excel File",
-    type=["xlsx", "csv"]
-)
+uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx", "csv"])
 
 if uploaded_file is not None:
 
-    # Read File
     if uploaded_file.name.endswith(".csv"):
         df = pd.read_csv(uploaded_file)
     else:
         df = pd.read_excel(uploaded_file)
 
     st.sidebar.success("File uploaded successfully")
-    st.sidebar.info("Select columns and explore insights")
 
-    # Data Preview
     st.subheader("📋 Data Preview")
     st.dataframe(df)
 
-    # Dataset Info
-    info1, info2 = st.columns(2)
+    c1, c2 = st.columns(2)
+    c1.metric("Rows", df.shape[0])
+    c2.metric("Columns", df.shape[1])
 
-    info1.metric("Rows", df.shape[0])
-    info2.metric("Columns", df.shape[1])
-
-    # Statistics
     st.subheader("📈 Basic Statistics")
     st.write(df.describe())
 
@@ -54,67 +38,39 @@ if uploaded_file is not None:
 
     if len(numeric_columns) > 0:
 
-        # Dataset Quality Score
         st.subheader("📊 Dataset Quality Score")
 
-        missing_values = df.isnull().sum().sum()
-        duplicate_rows = df.duplicated().sum()
-        total_cells = df.shape[0] * df.shape[1]
+        missing_values = int(df.isnull().sum().sum())
+        duplicate_rows = int(df.duplicated().sum())
+        total_cells = max(df.shape[0] * df.shape[1], 1)
 
-        quality_score = max(
-            0,
-            round(
-                100 - ((missing_values / max(total_cells, 1)) * 100),
-                1
-            )
+        quality_score = round(
+            100 - ((missing_values / total_cells) * 100),
+            1
         )
 
         q1, q2, q3 = st.columns(3)
-
         q1.metric("Missing Values", missing_values)
         q2.metric("Duplicate Rows", duplicate_rows)
         q3.metric("Quality Score", f"{quality_score}%")
 
-        if quality_score >= 90:
-            st.success("Excellent data quality detected.")
-        elif quality_score >= 70:
-            st.warning("Moderate data quality detected.")
-        else:
-            st.error("Poor data quality detected.")
-
-        # Advanced Insights
         st.subheader("🏆 Advanced Insights")
 
         column_means = df[numeric_columns].mean()
 
         top_column = column_means.idxmax()
-        top_value = column_means.max()
-
         low_column = column_means.idxmin()
-        low_value = column_means.min()
 
         a1, a2 = st.columns(2)
 
         with a1:
             st.success(
-                f"""
-🏆 Top Performing Column
-
-{top_column}
-
-Average: {top_value:.2f}
-"""
+                f"🏆 Top Performing Column\n\n{top_column}\n\nAverage: {column_means[top_column]:.2f}"
             )
 
         with a2:
             st.warning(
-                f"""
-📉 Lowest Performing Column
-
-{low_column}
-
-Average: {low_value:.2f}
-"""
+                f"📉 Lowest Performing Column\n\n{low_column}\n\nAverage: {column_means[low_column]:.2f}"
             )
 
         corr_matrix = df[numeric_columns].corr().abs()
@@ -126,16 +82,9 @@ Average: {low_value:.2f}
             strongest_value = corr_pairs.iloc[0]
 
             st.info(
-                f"""
-🔥 Strongest Correlation
-
-{strongest_pair[0]} ↔ {strongest_pair[1]}
-
-Correlation: {strongest_value:.2f}
-"""
+                f"🔥 Strongest Correlation: {strongest_pair[0]} ↔ {strongest_pair[1]} ({strongest_value:.2f})"
             )
 
-        # Column Selection
         st.subheader("📊 Column Selection")
 
         selected_column = st.selectbox(
@@ -143,351 +92,174 @@ Correlation: {strongest_value:.2f}
             numeric_columns
         )
 
-        # KPIs
         st.subheader("📌 Key Metrics")
 
-        kpi1, kpi2, kpi3 = st.columns(3)
+        k1, k2, k3 = st.columns(3)
+        avg_value = df[selected_column].mean()
+        max_value = df[selected_column].max()
+        min_value = df[selected_column].min()
 
-        kpi1.metric(
-            "Average",
-            round(df[selected_column].mean(), 2)
-        )
+        k1.metric("Average", round(avg_value, 2))
+        k2.metric("Maximum", round(max_value, 2))
+        k3.metric("Minimum", round(min_value, 2))
 
-        kpi2.metric(
-            "Maximum",
-            round(df[selected_column].max(), 2)
-        )
-
-        kpi3.metric(
-            "Minimum",
-            round(df[selected_column].min(), 2)
-        )
-
-        # Visualizations
         st.subheader("📉 Visualizations")
 
-        chart1, chart2 = st.columns(2)
+        ch1, ch2 = st.columns(2)
 
-        with chart1:
-            fig_line = px.line(
-                df,
-                y=selected_column,
-                title=f"{selected_column} Trend"
-            )
+        with ch1:
+            fig_line = px.line(df, y=selected_column, title=f"{selected_column} Trend")
+            st.plotly_chart(fig_line, use_container_width=True)
 
-            st.plotly_chart(
-                fig_line,
-                use_container_width=True
-            )
+        with ch2:
+            fig_bar = px.bar(df, y=selected_column, title=f"{selected_column} Distribution")
+            st.plotly_chart(fig_bar, use_container_width=True)
 
-        with chart2:
-            fig_bar = px.bar(
-                df,
-                y=selected_column,
-                title=f"{selected_column} Distribution"
-            )
-
-            st.plotly_chart(
-                fig_bar,
-                use_container_width=True
-            )
-
-        # Pie Chart
         st.subheader("🥧 Pie Chart")
 
         fig_pie = px.pie(
             df,
             values=selected_column,
-            names=df.index.astype(str),
-            title=f"{selected_column} Distribution"
+            names=df.index.astype(str)
         )
+        st.plotly_chart(fig_pie, use_container_width=True)
 
-        st.plotly_chart(
-            fig_pie,
-            use_container_width=True
-        )
-
-        # Correlation Analysis
         st.subheader("🔗 Correlation Analysis")
 
-        col_a = st.selectbox(
-            "Select First Column",
-            numeric_columns,
-            key="col_a"
-        )
-
-        col_b = st.selectbox(
-            "Select Second Column",
-            numeric_columns,
-            key="col_b"
-        )
+        col_a = st.selectbox("Select First Column", numeric_columns, key="a")
+        col_b = st.selectbox("Select Second Column", numeric_columns, key="b")
 
         correlation = df[col_a].corr(df[col_b])
 
-        st.metric(
-            "Correlation",
-            round(correlation, 2)
-        )
+        st.metric("Correlation", round(correlation, 2))
 
-        if correlation > 0.5:
-            st.success(
-                f"There is a strong positive relationship between {col_a} and {col_b}"
-            )
-        elif correlation < -0.5:
-            st.error(
-                f"There is a strong negative relationship between {col_a} and {col_b}"
-            )
-        else:
-            st.info(
-                f"No strong relationship detected between {col_a} and {col_b}"
-            )
-
-        # Scatter Plot
         st.subheader("🎯 Scatter Plot")
 
-        fig_scatter = px.scatter(
-            df,
-            x=col_a,
-            y=col_b,
-            title=f"{col_a} vs {col_b}"
-        )
+        fig_scatter = px.scatter(df, x=col_a, y=col_b)
+        st.plotly_chart(fig_scatter, use_container_width=True)
 
-        st.plotly_chart(
-            fig_scatter,
-            use_container_width=True
-        )
-# Outlier Detection
+        st.subheader("🚨 Outlier Detection")
 
-st.subheader("🚨 Outlier Detection")
+        Q1 = df[selected_column].quantile(0.25)
+        Q3 = df[selected_column].quantile(0.75)
+        IQR = Q3 - Q1
 
-Q1 = df[selected_column].quantile(0.25)
-Q3 = df[selected_column].quantile(0.75)
+        lower_bound = Q1 - (1.5 * IQR)
+        upper_bound = Q3 + (1.5 * IQR)
 
-IQR = Q3 - Q1
+        outliers = df[
+            (df[selected_column] < lower_bound) |
+            (df[selected_column] > upper_bound)
+        ]
 
-lower_bound = Q1 - (1.5 * IQR)
-upper_bound = Q3 + (1.5 * IQR)
+        st.metric("Outliers Found", len(outliers))
 
-outliers = df[
-    (df[selected_column] < lower_bound)
-    |
-    (df[selected_column] > upper_bound)
-]
+        if len(outliers) > 0:
+            st.dataframe(outliers)
+        else:
+            st.success("No significant outliers detected.")
 
-st.metric(
-    "Outliers Found",
-    len(outliers)
-)
+        st.subheader("🤖 Smart Insights")
 
-if len(outliers) > 0:
-    st.dataframe(outliers)
-else:
-    st.success(
-        "No significant outliers detected."
-    )
-# Smart Insights
-    st.subheader("🤖 Smart Insights")
-
-    max_value = df[selected_column].max()
-    min_value = df[selected_column].min()
-    avg_value = df[selected_column].mean()
-
-    growth = (
-            (
-                df[selected_column].iloc[-1]
-                - df[selected_column].iloc[0]
-            )
+        growth = (
+            (df[selected_column].iloc[-1] - df[selected_column].iloc[0])
             / max(abs(df[selected_column].iloc[0]), 1)
         ) * 100
 
-    insight_text = f"""
-📊 Average {selected_column}: {avg_value:.2f}
-
-📈 Highest value: {max_value}
-
-📉 Lowest value: {min_value}
-
-🚀 Growth from first record to last record: {growth:.1f}%
-"""
-
-    if growth > 0:
-            st.success(insight_text)
-    else:
-            st.warning(insight_text)
-# Executive Summary
-
-st.subheader("📄 Executive Summary")
-
-if st.button("Generate Executive Summary"):
-
-    summary = f"""
-Dataset contains {df.shape[0]} rows and {df.shape[1]} columns.
-
-Data Quality Score: {quality_score}%
-
-Selected Metric: {selected_column}
-
-Average Value: {avg_value:.2f}
+        st.info(
+            f"""
+Average: {avg_value:.2f}
 
 Highest Value: {max_value}
 
 Lowest Value: {min_value}
 
-Detected Outliers: {len(outliers)}
-
-Correlation between {col_a} and {col_b}: {correlation:.2f}
+Growth: {growth:.1f}%
 """
-
-    st.text_area(
-        "Executive Summary",
-        summary,
-        height=250
-    )
-# Business Recommendations
-
-st.subheader("💡 Business Recommendations")
-
-if st.button("Generate Recommendations"):
-
-    recommendations = []
-
-    if quality_score < 90:
-        recommendations.append(
-            "Improve data quality by addressing missing values."
         )
 
-    if len(outliers) > 0:
-        recommendations.append(
-            "Investigate detected outliers before making business decisions."
-        )
+        st.subheader("📄 Executive Summary")
 
-    if abs(correlation) > 0.7:
-        recommendations.append(
-            f"Monitor the relationship between {col_a} and {col_b} closely."
-        )
+        if st.button("Generate Executive Summary"):
+            summary = f"""
+Dataset contains {df.shape[0]} rows and {df.shape[1]} columns.
 
-    if growth > 0:
-        recommendations.append(
-            f"{selected_column} shows positive growth. Continue monitoring performance."
-        )
-    else:
-        recommendations.append(
-            f"{selected_column} shows negative growth. Investigate the cause."
-        )
+Quality Score: {quality_score}%
 
-    if len(recommendations) == 0:
-        recommendations.append(
-            "No major issues detected. Continue monitoring the dataset."
-        )
+Selected Metric: {selected_column}
 
-    for rec in recommendations:
-        st.success(rec)    
-# AI Insights
-    st.subheader("🤖 AI Insights")
+Average: {avg_value:.2f}
 
-    if st.button("Generate AI Insights"):
+Highest: {max_value}
 
+Lowest: {min_value}
+
+Outliers: {len(outliers)}
+
+Correlation ({col_a}, {col_b}): {correlation:.2f}
+"""
+            st.text_area("Executive Summary", summary, height=250)
+
+        st.subheader("💡 Business Recommendations")
+
+        if st.button("Generate Recommendations"):
+            recommendations = []
+
+            if len(outliers) > 0:
+                recommendations.append("Investigate detected outliers.")
+
+            if abs(correlation) > 0.7:
+                recommendations.append("Monitor strongly correlated metrics.")
+
+            if growth > 0:
+                recommendations.append("Positive growth detected.")
+            else:
+                recommendations.append("Investigate negative growth trend.")
+
+            for rec in recommendations:
+                st.success(rec)
+
+        st.subheader("🤖 AI Insights")
+
+        if st.button("Generate AI Insights"):
             insights = []
-
             for col in numeric_columns:
-                avg = df[col].mean()
-                maximum = df[col].max()
-                minimum = df[col].min()
-
                 insights.append(
-                    f"• {col}: Average = {avg:.2f}, Max = {maximum}, Min = {minimum}"
+                    f"• {col}: Avg={df[col].mean():.2f}, Max={df[col].max()}, Min={df[col].min()}"
                 )
-
-            st.success("AI Analysis Complete")
             st.markdown("\n".join(insights))
-# PDF Report Export
 
-st.subheader("📄 Export PDF Report")
+        st.subheader("📄 Export PDF Report")
 
-if st.button("Generate PDF Report"):
+        if st.button("Generate PDF Report"):
 
-    buffer = BytesIO()
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer)
+            styles = getSampleStyleSheet()
 
-    doc = SimpleDocTemplate(buffer)
+            content = [
+                Paragraph("Personal Insights Analyzer Report", styles["Title"]),
+                Spacer(1, 12),
+                Paragraph(f"Rows: {df.shape[0]}", styles["BodyText"]),
+                Paragraph(f"Columns: {df.shape[1]}", styles["BodyText"]),
+                Paragraph(f"Quality Score: {quality_score}%", styles["BodyText"]),
+                Paragraph(f"Selected Metric: {selected_column}", styles["BodyText"]),
+            ]
 
-    styles = getSampleStyleSheet()
+            doc.build(content)
 
-    content = []
+            st.download_button(
+                "⬇️ Download PDF Report",
+                buffer.getvalue(),
+                "analysis_report.pdf",
+                "application/pdf"
+            )
 
-    content.append(
-        Paragraph(
-            "Personal Insights Analyzer Report",
-            styles["Title"]
-        )
-    )
+        st.subheader("⬇️ Download Data")
 
-    content.append(Spacer(1, 12))
+        csv = df.to_csv(index=False)
 
-    content.append(
-        Paragraph(
-            f"Rows: {df.shape[0]}",
-            styles["BodyText"]
-        )
-    )
-
-    content.append(
-        Paragraph(
-            f"Columns: {df.shape[1]}",
-            styles["BodyText"]
-        )
-    )
-
-    content.append(
-        Paragraph(
-            f"Quality Score: {quality_score}%",
-            styles["BodyText"]
-        )
-    )
-
-    content.append(
-        Paragraph(
-            f"Selected Metric: {selected_column}",
-            styles["BodyText"]
-        )
-    )
-
-    content.append(
-        Paragraph(
-            f"Average: {avg_value:.2f}",
-            styles["BodyText"]
-        )
-    )
-
-    content.append(
-        Paragraph(
-            f"Maximum: {max_value}",
-            styles["BodyText"]
-        )
-    )
-
-    content.append(
-        Paragraph(
-            f"Minimum: {min_value}",
-            styles["BodyText"]
-        )
-    )
-
-    doc.build(content)
-
-    pdf_data = buffer.getvalue()
-
-    st.download_button(
-        label="⬇️ Download PDF Report",
-        data=pdf_data,
-        file_name="analysis_report.pdf",
-        mime="application/pdf"
-    )
-# Download
-    st.subheader("⬇️ Download Data")
-
-    csv = df.to_csv(index=False)
-
-    st.download_button(
+        st.download_button(
             label="Download CSV",
             data=csv,
             file_name="processed_data.csv",
