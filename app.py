@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+
 
 st.set_page_config(
     page_title="Personal Insights Analyzer",
@@ -100,12 +100,7 @@ if uploaded_file is not None:
         # Pie Chart
         st.subheader("🥧 Pie Chart")
 
-        fig_pie = px.pie(
-            values=df[selected_column],
-            names=df.index,
-            title=f"{selected_column} Distribution"
-        )
-
+    
         st.plotly_chart(
             fig_pie,
             use_container_width=True
@@ -152,13 +147,6 @@ if uploaded_file is not None:
 
         # Scatter Plot
         st.subheader("🎯 Scatter Plot")
-
-        fig_scatter = px.scatter(
-            df,
-            x=col_a,
-            y=col_b,
-            title=f"{col_a} vs {col_b}"
-        )
 
         st.plotly_chart(
             fig_scatter,
