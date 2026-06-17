@@ -86,16 +86,36 @@ if uploaded_file is not None:
             round(df[selected_column].min(), 2)
         )
 
-        # Charts
+        # Visualizations
         st.subheader("📉 Visualizations")
 
         chart1, chart2 = st.columns(2)
 
         with chart1:
-            st.line_chart(df[selected_column])
+
+            fig_line = px.line(
+                df,
+                y=selected_column,
+                title=f"{selected_column} Trend"
+            )
+
+            st.plotly_chart(
+                fig_line,
+                use_container_width=True
+            )
 
         with chart2:
-            st.bar_chart(df[selected_column])
+
+            fig_bar = px.bar(
+                df,
+                y=selected_column,
+                title=f"{selected_column} Distribution"
+            )
+
+            st.plotly_chart(
+                fig_bar,
+                use_container_width=True
+            )
 
         # Pie Chart
         st.subheader("🥧 Pie Chart")
@@ -103,7 +123,7 @@ if uploaded_file is not None:
         fig_pie = px.pie(
             df,
             values=selected_column,
-            names=df.index,
+            names=df.index.astype(str),
             title=f"{selected_column} Distribution"
         )
 
@@ -127,9 +147,7 @@ if uploaded_file is not None:
             key="col_b"
         )
 
-        correlation = df[col_a].corr(
-            df[col_b]
-        )
+        correlation = df[col_a].corr(df[col_b])
 
         st.metric(
             "Correlation",
@@ -186,9 +204,7 @@ Minimum: {min_value}
         # Download
         st.subheader("⬇️ Download Data")
 
-        csv = df.to_csv(
-            index=False
-        )
+        csv = df.to_csv(index=False)
 
         st.download_button(
             label="Download CSV",
