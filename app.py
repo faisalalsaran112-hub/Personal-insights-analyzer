@@ -98,13 +98,7 @@ if uploaded_file is not None:
             st.bar_chart(df[selected_column])
 
         # Pie Chart
-        st.subheader("🥧 Pie Chart")
 
-    
-        st.plotly_chart(
-            fig_pie,
-            use_container_width=True
-        )
 
         # Correlation Analysis
         st.subheader("🔗 Correlation Analysis")
@@ -146,12 +140,7 @@ if uploaded_file is not None:
             )
 
         # Scatter Plot
-        st.subheader("🎯 Scatter Plot")
 
-        st.plotly_chart(
-            fig_scatter,
-            use_container_width=True
-        )
 
         # Auto Insights
         st.subheader("🤖 Auto Insights")
