@@ -53,7 +53,47 @@ if uploaded_file is not None:
     # Statistics
     st.subheader("📈 Basic Statistics")
     st.write(df.describe())
+# Dataset Quality Score
 
+st.subheader("📊 Dataset Quality Report")
+
+missing_values = df.isnull().sum().sum()
+
+duplicate_rows = df.duplicated().sum()
+
+total_cells = df.shape[0] * df.shape[1]
+
+quality_score = max(
+    0,
+    round(
+        100 - ((missing_values / max(total_cells, 1)) * 100),
+        1
+    )
+)
+
+q1, q2, q3 = st.columns(3)
+
+q1.metric(
+    "Missing Values",
+    missing_values
+)
+
+q2.metric(
+    "Duplicate Rows",
+    duplicate_rows
+)
+
+q3.metric(
+    "Quality Score",
+    f"{quality_score}%"
+)
+
+if quality_score >= 90:
+    st.success("Excellent data quality detected.")
+elif quality_score >= 70:
+    st.warning("Moderate data quality detected.")
+else:
+    st.error("Poor data quality detected.")
     numeric_columns = df.select_dtypes(include="number").columns
 
     if len(numeric_columns) > 0:
@@ -200,13 +240,40 @@ Maximum: {max_value}
 Minimum: {min_value}
 """
         )
+# AI Insights
 
-        # Download
-        st.subheader("⬇️ Download Data")
+st.subheader("🤖 AI Insights")
 
-        csv = df.to_csv(index=False)
+if st.button("Generate AI Insights"):
 
-        st.download_button(
+    insights = []
+
+    for col in numeric_columns:
+
+        avg = df[col].mean()
+
+        maximum = df[col].max()
+
+        minimum = df[col].min()
+
+        insights.append(
+            f"• {col}: Average = {avg:.2f}, Max = {maximum}, Min = {minimum}"
+        )
+
+    st.success(
+        "AI Analysis Complete"
+    )
+
+    st.markdown(
+        "\n".join(insights)
+    )
+# Download
+    st.subheader("⬇️ Download Data")
+    
+
+    csv = df.to_csv(index=False)
+
+    st.download_button(
             label="Download CSV",
             data=csv,
             file_name="processed_data.csv",
