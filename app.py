@@ -253,15 +253,43 @@ Correlation: {strongest_value:.2f}
             fig_scatter,
             use_container_width=True
         )
+# Outlier Detection
 
-        # Smart Insights
-        st.subheader("🤖 Smart Insights")
+st.subheader("🚨 Outlier Detection")
 
-        max_value = df[selected_column].max()
-        min_value = df[selected_column].min()
-        avg_value = df[selected_column].mean()
+Q1 = df[selected_column].quantile(0.25)
+Q3 = df[selected_column].quantile(0.75)
 
-        growth = (
+IQR = Q3 - Q1
+
+lower_bound = Q1 - (1.5 * IQR)
+upper_bound = Q3 + (1.5 * IQR)
+
+outliers = df[
+    (df[selected_column] < lower_bound)
+    |
+    (df[selected_column] > upper_bound)
+]
+
+st.metric(
+    "Outliers Found",
+    len(outliers)
+)
+
+if len(outliers) > 0:
+    st.dataframe(outliers)
+else:
+    st.success(
+        "No significant outliers detected."
+    )
+# Smart Insights
+    st.subheader("🤖 Smart Insights")
+
+    max_value = df[selected_column].max()
+    min_value = df[selected_column].min()
+    avg_value = df[selected_column].mean()
+
+    growth = (
             (
                 df[selected_column].iloc[-1]
                 - df[selected_column].iloc[0]
@@ -269,7 +297,7 @@ Correlation: {strongest_value:.2f}
             / max(abs(df[selected_column].iloc[0]), 1)
         ) * 100
 
-        insight_text = f"""
+    insight_text = f"""
 📊 Average {selected_column}: {avg_value:.2f}
 
 📈 Highest value: {max_value}
@@ -279,15 +307,43 @@ Correlation: {strongest_value:.2f}
 🚀 Growth from first record to last record: {growth:.1f}%
 """
 
-        if growth > 0:
+    if growth > 0:
             st.success(insight_text)
-        else:
+    else:
             st.warning(insight_text)
+# Executive Summary
 
-        # AI Insights
-        st.subheader("🤖 AI Insights")
+st.subheader("📄 Executive Summary")
 
-        if st.button("Generate AI Insights"):
+if st.button("Generate Executive Summary"):
+
+    summary = f"""
+Dataset contains {df.shape[0]} rows and {df.shape[1]} columns.
+
+Data Quality Score: {quality_score}%
+
+Selected Metric: {selected_column}
+
+Average Value: {avg_value:.2f}
+
+Highest Value: {max_value}
+
+Lowest Value: {min_value}
+
+Detected Outliers: {len(outliers)}
+
+Correlation between {col_a} and {col_b}: {correlation:.2f}
+"""
+
+    st.text_area(
+        "Executive Summary",
+        summary,
+        height=250
+    )
+# AI Insights
+    st.subheader("🤖 AI Insights")
+
+    if st.button("Generate AI Insights"):
 
             insights = []
 
@@ -303,12 +359,12 @@ Correlation: {strongest_value:.2f}
             st.success("AI Analysis Complete")
             st.markdown("\n".join(insights))
 
-        # Download
-        st.subheader("⬇️ Download Data")
+# Download
+    st.subheader("⬇️ Download Data")
 
-        csv = df.to_csv(index=False)
+    csv = df.to_csv(index=False)
 
-        st.download_button(
+    st.download_button(
             label="Download CSV",
             data=csv,
             file_name="processed_data.csv",
