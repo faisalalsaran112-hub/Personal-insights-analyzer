@@ -1,19 +1,30 @@
 # Personal Insights Analyzer
 
-A data analysis dashboard built with Python, Streamlit, Pandas, and Plotly.
+## Overview
+
+Personal Insights Analyzer is an interactive data analytics web application built using Python, Streamlit, Pandas, and Plotly.
+
+The application allows users to upload Excel or CSV files and instantly generate visualizations, statistical summaries, data quality assessments, outlier detection, correlation analysis, and downloadable reports.
 
 ## Features
 
 * Upload Excel (.xlsx) and CSV files
-* Preview uploaded datasets
-* Generate descriptive statistics
-* Display key performance metrics
-* Interactive line and bar charts
-* Pie chart visualization
-* Correlation analysis between numeric columns
-* Scatter plot visualization
-* Automated insights generation
-* Download processed data as CSV
+* Interactive data preview
+* Basic statistical analysis
+* Dataset Quality Score
+* KPI metrics (Average, Maximum, Minimum)
+* Line Charts
+* Bar Charts
+* Pie Charts
+* Scatter Plots
+* Correlation Analysis
+* Outlier Detection
+* Smart Insights
+* Executive Summary Generator
+* Business Recommendations
+* AI-Style Insights
+* PDF Report Export
+* CSV Download
 
 ## Technologies Used
 
@@ -21,30 +32,34 @@ A data analysis dashboard built with Python, Streamlit, Pandas, and Plotly.
 * Streamlit
 * Pandas
 * Plotly
-* OpenPyXL
+* ReportLab
 
-## Installation
+## Project Objectives
 
-```bash
+The goal of this project is to simplify data exploration and provide users with an easy-to-use analytics dashboard that can generate meaningful insights from uploaded datasets without requiring advanced technical skills.
+
+## How to Run
+
+1. Clone the repository
+
+2. Install dependencies
+
 pip install -r requirements.txt
-```
 
-## Run the Application
+3. Run the application
 
-```bash
 streamlit run app.py
-```
 
-## Project Structure
+## Live Demo
 
-```text
-Personal-Insights-Analyzer/
-│
-├── app.py
-├── requirements.txt
-├── README.md
-```
+Add your deployed application URL here:
+
+https://personal-insights-analyzer.onrender.com/
 
 ## Author
 
-Faisal Alsaran
+Faisal Saraan
+
+King Saud University – Statistics Graduate
+
+Aspiring Data Analyst
